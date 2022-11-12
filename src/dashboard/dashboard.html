@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="shortcut icon"
+      href="../assets/Spotify_Icon_RGB_Green.png"
+      type="image/x-icon"
+    />
     <title>Spotify | dashboard</title>
     <link rel="stylesheet" href="../style.css" />
     <link
@@ -16,13 +21,49 @@
     <main
       class="grid-template grid-template-areas grid h-full grid-cols-[200px_1fr] grid-rows-[1fr_auto]"
     >
-      <aside class="sidenav">aside</aside>
+      <aside class="sidenav">
+        <nav class="flex flex-col items-start gap-8 py-8 px-4">
+          <section>
+            <a href="/">
+              <img
+                class="h-10 object-contain"
+                src="../assets/Spotify_Logo_RGB_White.png"
+                alt=""
+              />
+            </a>
+          </section>
+          <section>
+            <ul class="flex flex-col gap-4 text-sm text-secondary">
+              <li
+                class="flex cursor-pointer items-center gap-2 hover:text-primary"
+              >
+                <span class="material-symbols-outlined"> home </span
+                ><span>Home </span>
+              </li>
+              <li
+                class="flex cursor-pointer items-center gap-2 hover:text-primary"
+              >
+                <span class="material-symbols-outlined"> search </span
+                ><span>Search </span>
+              </li>
+            </ul>
+          </section>
+          <section
+            id="user-playlists"
+            class="w-full border-t border-light-black p-4"
+          >
+            <ul
+              class="scrollbar-hide flex h-[40vh] flex-col gap-4 overflow-auto text-secondary"
+            ></ul>
+          </section>
+        </nav>
+      </aside>
       <article class="content relative overflow-auto bg-transparent">
-        <header class="header z-10 bg-transparent px-8 py-4">
+        <header class="header sticky top-0 z-10 bg-black/[0] px-8 py-4">
           <nav class="navbar flex justify-end">
             <button
               id="user-profile-btn"
-              class="flex items-center gap-2 rounded-2xl p-1 px-2 hover:bg-light-black"
+              class="flex items-center gap-2 rounded-2xl bg-black p-1 px-2 hover:bg-light-black"
             >
               <section>
                 <svg
@@ -32,7 +73,7 @@
                   viewBox="0 0 24 24"
                   stroke-width="1.5"
                   stroke="currentColor"
-                  class="h-8 w-8 rounded-full bg-gray"
+                  class="h-6 w-6 rounded-full bg-gray"
                 >
                   <path
                     stroke-linecap="round"
@@ -50,6 +91,15 @@
               class="absolute top-14 right-3 hidden w-[200px] rounded-md bg-light-black p-1"
               id="menu-list"
             >
+              <li class="w-full cursor-pointer rounded-md p-1 hover:bg-gray">
+                Account
+              </li>
+              <li class="w-full cursor-pointer rounded-md p-1 hover:bg-gray">
+                Profile
+              </li>
+              <li class="w-full cursor-pointer rounded-md p-1 hover:bg-gray">
+                settings
+              </li>
               <li
                 id="logout"
                 class="w-full cursor-pointer rounded-md p-1 hover:bg-gray"
@@ -61,7 +111,7 @@
         </header>
         <article
           id="cover-content"
-          class="absolute top-0 -z-[1] grid h-72 w-full grid-cols-[auto_1fr] content-center gap-4 bg-gradient-to-b from-light-black to-black-base px-4"
+          class="absolute top-0 -z-[1] grid h-72 w-full grid-cols-[250px_1fr] grid-rows-[250px_1fr] content-center gap-4 bg-gradient-to-b from-light-black to-black-base px-4 pt-16"
         >
           <img class="h-36 w-36 object-contain" src="" alt="" />
           <section>
@@ -86,10 +136,13 @@
         </section>
       </article>
       <footer
-        class="now-playing border-t border-t-light-black bg-black-secondary text-secondary"
+        class="now-playing border-t border-t-light-black bg-black-secondary p-4 text-secondary"
       >
         <section class="grid grid-cols-[1fr_2fr_1fr] gap-4">
-          <section class="grid grid-cols-[auto_1fr] place-content-center gap-4">
+          <section
+            id="song-info"
+            class="invisible grid grid-cols-[auto_1fr] place-content-center gap-4"
+          >
             <img id="now-playing-image" class="h-12 w-12" src="" alt="title" />
             <section class="flex flex-col justify-center">
               <h2
@@ -109,7 +162,7 @@
             <section class="flex items-center justify-center">
               <button id="prev">
                 <span
-                  style="font-size: 48px"
+                  style="font-size: 40px"
                   class="material-symbols-outlined hover:text-primary"
                 >
                   skip_previous
@@ -117,7 +170,7 @@
               </button>
               <button id="play">
                 <span
-                  style="font-size: 48px"
+                  style="font-size: 40px"
                   class="material-symbols-outlined hover:text-primary"
                 >
                   play_circle
@@ -125,7 +178,7 @@
               </button>
               <button id="next">
                 <span
-                  style="font-size: 48px"
+                  style="font-size: 40px"
                   class="material-symbols-outlined hover:text-primary"
                 >
                   skip_next
@@ -135,19 +188,19 @@
             <!-- progress bar -->
             <section
               id="timeline"
-              class="flex w-full items-center justify-center gap-4 p-1"
+              class="flex w-full items-center justify-center gap-4"
             >
-              <span id="song-duration-completed"> 0:00 </span>
+              <span id="song-duration-completed" class="text-sm"> 0:00 </span>
               <section
                 id="timeline"
-                class="h-2 w-full cursor-pointer rounded-3xl bg-secondary"
+                class="h-1 w-full cursor-pointer rounded-3xl bg-secondary"
               >
                 <section
                   id="progress"
-                  class="h-2 w-0 rounded-3xl bg-green"
+                  class="h-1 w-0 rounded-3xl bg-green"
                 ></section>
               </section>
-              <span id="total-song-duration">0:00</span>
+              <span id="total-song-duration" class="text-sm">0:00</span>
             </section>
           </section>
           <section id="volume-control" class="flex items-center justify-center">

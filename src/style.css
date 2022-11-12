@@ -27,3 +27,33 @@
 .track.selected .play {
   visibility: visible;
 }
+
+.track.playing .track-no,
+.track.playing .song-title {
+  color: theme("colors.green");
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* For IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Track */
+.scrollbar-hide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Handle */
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background: hsla(0 0% 53% / 0.5);
+}
+
+/* Handle on hover */
+.scrollbar-hide::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

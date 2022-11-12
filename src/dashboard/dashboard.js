@@ -1,17 +1,11 @@
-import { fetchRequest } from "../api";
-import { ENDPOINT, logout, SECTION_TYPE } from "../common";
-
+import {
+  fetchRequest,
+  getItemInLocalStorage,
+  setItemInLocalStorage,
+} from "../api";
+import { ENDPOINT, LOADED_TRACK, logout, SECTION_TYPE } from "../common";
+let displayName;
 const audio = new Audio();
-const volume = document.querySelector("#volume");
-const playButton = document.querySelector("#play");
-const totalSongDuration = document.querySelector("#total-song-duration");
-const songDurationCompleted = document.querySelector(
-  "#song-duration-completed"
-);
-const songProgress = document.querySelector("#progress");
-const songTimeline = document.querySelector("#timeline");
-
-let progressInterval;
 
 const onProfileClick = (event) => {
   event.stopPropagation();
@@ -26,23 +20,26 @@ const onProfileClick = (event) => {
 };
 
 const loadUserProfile = async () => {
-  const defaultImage = document.getElementById("default-image");
-  const displayNameEl = document.getElementById("display-username");
-  const profileBtn = document.getElementById("user-profile-btn");
+  return new Promise(async (resolve, reject) => {
+    const defaultImage = document.getElementById("default-image");
+    const displayNameEl = document.getElementById("display-username");
+    const profileBtn = document.getElementById("user-profile-btn");
 
-  const { display_name: displayName, images } = await fetchRequest(
-    ENDPOINT.profileUrl
-  );
+    const { display_name: displayName, images } = await fetchRequest(
+      ENDPOINT.profileUrl
+    );
 
-  displayNameEl.textContent = displayName;
+    displayNameEl.textContent = displayName;
 
-  if (images?.length) {
-    defaultImage.classList.add("hidden");
-  } else {
-    defaultImage.classList.remove("hidden");
-  }
+    if (images?.length) {
+      defaultImage.classList.add("hidden");
+    } else {
+      defaultImage.classList.remove("hidden");
+    }
 
-  profileBtn.addEventListener("click", onProfileClick);
+    profileBtn.addEventListener("click", onProfileClick);
+    resolve({ displayName });
+  });
 };
 
 const onPlaylistItemClick = (event, id) => {
@@ -85,6 +82,8 @@ const loadPlaylists = () => {
 };
 
 const fillContentForDashboard = () => {
+  const coverContent = document.querySelector("#cover-content");
+  coverContent.innerHTML = `<h1 class="text-6xl">Hello ${displayName}</h1>`;
   const pageContent = document.querySelector("#page-content");
   const playlistMap = new Map([
     ["featured", "featured-playlist-items"],
@@ -122,79 +121,97 @@ const onSelectTrack = (id, event) => {
 };
 
 const updateIconsForPlayMode = (id) => {
+  const playButton = document.querySelector("#play");
   playButton.querySelector("span").textContent = "pause_circle";
   const playButtonInTracks = document.querySelector(`#play-track-${id}`);
-  playButtonInTracks.textContent = "||";
-  playButtonInTracks.setAttribute("data-play", "");
-};
-
-const onAudioMetaDataLoaded = (id) => {
-  totalSongDuration.textContent = `0:${audio.duration.toFixed(0)}`;
-  updateIconsForPlayMode(id);
-};
-
-const updateIconsForPauseMode = (id) => {
-  playButton.querySelector("span").textContent = "play_circle";
-  const playButtonInTracks = document.querySelector(`#play-track-${id}`);
-  playButtonInTracks.textContent = "▷";
-};
-
-const onNowPlayingPlayButton = (id) => {
-  if (audio.paused) {
-    audio.play();
-    updateIconsForPlayMode(id);
-  } else {
-    audio.pause();
-    updateIconsForPauseMode(id);
+  if (playButtonInTracks) {
+    playButtonInTracks.textContent = "pause";
   }
 };
 
-const onPlayTrack = (
+const updateIconsForPauseMode = (id) => {
+  const playButton = document.querySelector("#play");
+  playButton.querySelector("span").textContent = "play_circle";
+  const playButtonInTracks = document.querySelector(`#play-track-${id}`);
+  if (playButtonInTracks) {
+    playButtonInTracks.textContent = "play_arrow";
+  }
+};
+
+const onAudioMetaDataLoaded = () => {
+  const totalSongDuration = document.querySelector("#total-song-duration");
+  totalSongDuration.textContent = `0:${audio.duration.toFixed(0)}`;
+};
+
+const findCurrentTrack = () => {
+  const audioControl = document.querySelector("#audio-control");
+  const trackId = audioControl.getAttribute("data-track-id");
+  if (trackId) {
+    const loadedTracks = getItemInLocalStorage(LOADED_TRACK);
+    const currentTrackIndex = loadedTracks?.findIndex(
+      (trk) => trk.id === trackId
+    );
+    return { currentTrackIndex, tracks: loadedTracks };
+  }
+  return null;
+};
+const playNextTrack = () => {
+  const { currentTrackIndex = -1, tracks = null } = findCurrentTrack() ?? {};
+  if (currentTrackIndex > -1 && currentTrackIndex < tracks?.length - 1) {
+    playTrack(null, tracks[currentTrackIndex + 1]);
+  }
+};
+const playPrevTrack = () => {
+  const { currentTrackIndex = -1, tracks = null } = findCurrentTrack() ?? {};
+  if (currentTrackIndex > 0) {
+    playTrack(null, tracks[currentTrackIndex - 1]);
+  }
+};
+
+const togglePlay = () => {
+  if (audio.src) {
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }
+};
+
+const playTrack = (
   event,
   { image, artistNames, name, duration, previewUrl, id }
 ) => {
   console.log({ image, artistNames, name, duration, previewUrl, id });
 
-  const buttonWithDataAttribute = document.querySelector("[data-play]");
-  if (buttonWithDataAttribute?.id === `play-track-${id}`) {
-    onNowPlayingPlayButton(id);
+  if (event?.stopPropagation) {
+    event.stopPropagation();
+  }
+  if (audio.src === previewUrl) {
+    togglePlay();
   } else {
     const nowPlayingImage = document.querySelector("#now-playing-image");
-    nowPlayingImage.src = image.url;
     const songTitle = document.querySelector("#now-playing-song");
-    songTitle.textContent = name;
     const artists = document.querySelector("#now-playing-artists");
-    artists.textContent = artistNames;
+    const audioControl = document.querySelector("#audio-control");
+    const songInfo = document.querySelector("#song-info");
 
+    audioControl.setAttribute("data-track-id", id);
+    nowPlayingImage.src = image.url;
+    songTitle.textContent = name;
+    artists.textContent = artistNames;
     audio.src = previewUrl;
-    audio.removeEventListener("loadedmetadata", () =>
-      onAudioMetaDataLoaded(id)
-    );
-    audio.addEventListener("loadedmetadata", () => onAudioMetaDataLoaded(id));
-    playButton.addEventListener("click", () => onNowPlayingPlayButton(id));
+    songInfo.classList.remove("invisible");
+
     audio.play();
-    clearInterval(progressInterval);
-    progressInterval = setInterval(() => {
-      if (audio.paused) {
-        return;
-      } else {
-        songDurationCompleted.textContent = `${
-          audio.currentTime.toFixed(0) < 10
-            ? "0:0" + audio.currentTime.toFixed(0)
-            : "0:" + audio.currentTime.toFixed(0)
-        }`;
-        songProgress.style.width = `${
-          (audio.currentTime / audio.duration) * 100
-        }%`;
-      }
-    }, 100);
   }
 };
 
 const loadPlaylistTracks = ({ tracks }) => {
   const trackSection = document.querySelector("#tracks");
   let trackNum = 1;
-  for (let trackItem of tracks.items) {
+  let loadedTracks = [];
+  for (let trackItem of tracks.items.filter((item) => item.track.preview_url)) {
     let {
       id,
       artists,
@@ -215,7 +232,7 @@ const loadPlaylistTracks = ({ tracks }) => {
     <section class="grid grid-cols-[auto_1fr] place-items-center gap-2">
       <img class="h-10 w-10" src="${image.url}" alt="${name}" />
       <article class="flex flex-col gap-2 justify-center">
-        <p class="text-base text-primary line-clamp-1">${name}</p>
+        <p class="song-title text-base text-primary line-clamp-1">${name}</p>
         <p class="text-xs line-clamp-1">${artistNames}</p>
       </article>
     </section>
@@ -225,15 +242,26 @@ const loadPlaylistTracks = ({ tracks }) => {
     track.addEventListener("click", (event) => onSelectTrack(id, event));
     const playButton = document.createElement("button");
     playButton.id = `play-track-${id}`;
-    playButton.className = "play w-full absolute left-0 text-lg invisible";
-    playButton.innerHTML = "▷";
+    playButton.className =
+      "play w-full absolute left-0 text-lg invisible material-symbols-outlined";
+    playButton.innerHTML = "play_arrow";
     playButton.addEventListener("click", (event) =>
-      onPlayTrack(event, { image, artistNames, name, duration, previewUrl, id })
+      playTrack(event, { image, artistNames, name, duration, previewUrl, id })
     );
     track.querySelector("p").appendChild(playButton);
 
     trackSection.appendChild(track);
+    loadedTracks.push({
+      id,
+      artistNames,
+      name,
+      duration,
+      previewUrl,
+      image,
+      album,
+    });
   }
+  setItemInLocalStorage(LOADED_TRACK, loadedTracks);
 };
 
 const fillContentForPlaylist = async (playlistId) => {
@@ -243,11 +271,11 @@ const fillContentForPlaylist = async (playlistId) => {
   coverElement.innerHTML = `
   <img class="h-36 w-36 object-contain" src="${images[0].url}" alt="" />
   <section>
-    <h1 id="playlist-name" class="text-4xl">${name}</h1>
+    <h1 id="playlist-name" class="text-5xl">${name}</h1>
     <p id="playlist-details">${tracks.items.length} songs</p>
   </section>`;
   const pageContent = document.querySelector("#page-content");
-  pageContent.innerHTML = `  <header id="playlist-header" class="border-secondary border-b-[0.5px] py-2 mx-8 z-10">
+  pageContent.innerHTML = `  <header id="playlist-header" class="border-secondary border-b-[0.5px] mx-8 z-10">
   <nav>
     <ul 
       class="py-2 grid grid-cols-[50px_2fr_1fr_50px] gap-4 text-secondary"
@@ -267,18 +295,21 @@ const fillContentForPlaylist = async (playlistId) => {
 const onScrollSticky = (event) => {
   const { scrollTop } = event.target;
   const header = document.querySelector(".header");
-  if (scrollTop >= header.offsetHeight) {
-    header.classList.add("sticky", "top-0", "bg-black");
-    header.classList.remove("bg-transparent");
-  } else {
-    header.classList.remove("sticky", "top-0", "bg-black");
-    header.classList.add("bg-transparent");
-  }
+  const coverContent = document.querySelector("#cover-content");
+
+  const totalHeight = coverContent.offsetHeight;
+  const coverOpacity =
+    100 - (scrollTop >= totalHeight ? 100 : (scrollTop / totalHeight) * 100);
+  const headerOpacity =
+    scrollTop >= header.offsetHeight
+      ? 100
+      : (scrollTop / header.offsetHeight) * 100;
+  coverContent.style.opacity = `${coverOpacity}%`;
+  header.style.background = `rgba(0 0 0/${headerOpacity}%)`;
 
   if (history.state.type === SECTION_TYPE.PLAYLIST) {
-    const coverContent = document.querySelector("#cover-content");
     const playlistHeader = document.querySelector("#playlist-header");
-    if (scrollTop >= coverContent.offsetHeight - playlistHeader.offsetHeight) {
+    if (coverOpacity <= 35) {
       playlistHeader.classList.add("sticky", "bg-black-secondary", "px-8");
       playlistHeader.classList.remove("mx-8");
       playlistHeader.style.top = `${playlistHeader.offsetHeight}px`;
@@ -304,12 +335,42 @@ const loadSection = (section) => {
   document.querySelector(".content").addEventListener("scroll", onScrollSticky);
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadUserProfile();
+const loadUserPlaylistTracks = (id) => {
+  const section = { type: SECTION_TYPE.PLAYLIST, playlist: id };
+  history.pushState(section, "", `/dashboard/playlist/${id}`);
+  loadSection(section);
+};
+
+const loadUserPlaylist = async () => {
+  const playlists = await fetchRequest(ENDPOINT.userPlaylists);
+  const userPlaylistSection = document.querySelector("#user-playlists > ul");
+  userPlaylistSection.innerHTML = "";
+  for (let { name, id } of playlists.items) {
+    const li = document.createElement("li");
+    li.textContent = name;
+    li.classList = "cursor-pointer hover:text-primary";
+    li.addEventListener("click", () => loadUserPlaylistTracks(id));
+    userPlaylistSection.appendChild(li);
+  }
+};
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const volume = document.querySelector("#volume");
+  const playButton = document.querySelector("#play");
+  const songDurationCompleted = document.querySelector(
+    "#song-duration-completed"
+  );
+  const songProgress = document.querySelector("#progress");
+  const songTimeline = document.querySelector("#timeline");
+  const audioControl = document.querySelector("#audio-control");
+  let progressInterval;
+
+  ({ displayName } = await loadUserProfile());
+  loadUserPlaylist();
   const section = { type: SECTION_TYPE.DASHBOARD };
   // const section = {
   //   type: SECTION_TYPE.PLAYLIST,
-  //   playlist: "37i9dQZF1DX7cLxqtNO3zl",
+  //   playlist: "37i9dQZF1DX4Cmr6Ex5w24",
   // };
   history.pushState(section, "", "");
   // history.pushState(section, "", `/dashboard/playlist/${section.playlist}`);
@@ -321,6 +382,46 @@ document.addEventListener("DOMContentLoaded", () => {
       menuList.classList.add("hidden");
     }
   });
+
+  audio.addEventListener("play", () => {
+    const selectedTrackId = audioControl.getAttribute("data-track-id");
+    const tracks = document.querySelector("#tracks");
+    const playingTrack = tracks?.querySelector("section.playing");
+    const selectedTrack = tracks?.querySelector(`[id="${selectedTrackId}"]`);
+    const next = document.querySelector("#next");
+    const prev = document.querySelector("#prev");
+
+    if (playingTrack?.id !== selectedTrack?.id) {
+      playingTrack?.classList.remove("playing");
+    }
+    selectedTrack?.classList.add("playing");
+    progressInterval = setInterval(() => {
+      if (audio.paused) {
+        return;
+      } else {
+        songDurationCompleted.textContent = `${
+          audio.currentTime.toFixed(0) < 10
+            ? "0:0" + audio.currentTime.toFixed(0)
+            : "0:" + audio.currentTime.toFixed(0)
+        }`;
+        songProgress.style.width = `${
+          (audio.currentTime / audio.duration) * 100
+        }%`;
+      }
+    }, 100);
+    updateIconsForPlayMode(selectedTrackId);
+  });
+
+  audio.addEventListener("pause", () => {
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
+    const selectedTrackId = audioControl.getAttribute("data-track-id");
+    updateIconsForPauseMode(selectedTrackId);
+  });
+
+  audio.addEventListener("loadedmetadata", onAudioMetaDataLoaded);
+  playButton.addEventListener("click", togglePlay);
 
   volume.addEventListener("change", () => {
     audio.volume = volume.value / 100;
@@ -338,6 +439,8 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     false
   );
+  next.addEventListener("click", playNextTrack);
+  prev.addEventListener("click", playPrevTrack);
 
   window.addEventListener("popstate", (event) => {
     loadSection(event.state);
