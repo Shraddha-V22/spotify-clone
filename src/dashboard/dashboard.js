@@ -91,7 +91,7 @@ const fillContentForDashboard = () => {
   ]);
   let innerHTML = "";
   for (let [type, id] of playlistMap) {
-    innerHTML += `<article class="p-4">
+    innerHTML += `<article class="px-8 py-4">
     <h1 class="mb-4 text-2xl font-bold capitalize">${type}</h1>
     <section
       id="${id}"
@@ -269,7 +269,7 @@ const fillContentForPlaylist = async (playlistId) => {
   const coverElement = document.querySelector("#cover-content");
   const { name, images, tracks } = playlist;
   coverElement.innerHTML = `
-  <img class="h-36 w-36 object-contain" src="${images[0].url}" alt="" />
+  <img class="h-36 w-36 object-contain shadow-md" src="${images[0].url}" alt="" />
   <section>
     <h1 id="playlist-name" class="text-5xl">${name}</h1>
     <p id="playlist-details">${tracks.items.length} songs</p>
@@ -368,11 +368,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   ({ displayName } = await loadUserProfile());
   loadUserPlaylist();
   const section = { type: SECTION_TYPE.DASHBOARD };
+  history.pushState(section, "", "");
   // const section = {
   //   type: SECTION_TYPE.PLAYLIST,
   //   playlist: "37i9dQZF1DX4Cmr6Ex5w24",
   // };
-  history.pushState(section, "", "");
   // history.pushState(section, "", `/dashboard/playlist/${section.playlist}`);
   loadSection(section);
 
@@ -388,8 +388,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tracks = document.querySelector("#tracks");
     const playingTrack = tracks?.querySelector("section.playing");
     const selectedTrack = tracks?.querySelector(`[id="${selectedTrackId}"]`);
-    const next = document.querySelector("#next");
-    const prev = document.querySelector("#prev");
 
     if (playingTrack?.id !== selectedTrack?.id) {
       playingTrack?.classList.remove("playing");

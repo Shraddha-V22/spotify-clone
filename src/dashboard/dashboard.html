@@ -19,7 +19,7 @@
   </head>
   <body class="h-screen bg-black text-primary">
     <main
-      class="grid-template grid-template-areas grid h-full grid-cols-[200px_1fr] grid-rows-[1fr_auto]"
+      class="grid-template grid-template-areas grid h-full grid-cols-[250px_1fr] grid-rows-[1fr_auto]"
     >
       <aside class="sidenav">
         <nav class="flex flex-col items-start gap-8 py-8 px-4">
@@ -111,7 +111,7 @@
         </header>
         <article
           id="cover-content"
-          class="absolute top-0 -z-[1] grid h-72 w-full grid-cols-[250px_1fr] grid-rows-[250px_1fr] content-center gap-4 bg-gradient-to-b from-light-black to-black-base px-4 pt-16"
+          class="absolute top-0 -z-[1] grid h-72 w-full grid-cols-[250px_1fr] grid-rows-[250px_1fr] content-center gap-4 bg-gradient-to-b from-light-black to-black-base px-8 pt-16"
         >
           <img class="h-36 w-36 object-contain" src="" alt="" />
           <section>
@@ -136,7 +136,7 @@
         </section>
       </article>
       <footer
-        class="now-playing border-t border-t-light-black bg-black-secondary p-4 text-secondary"
+        class="now-playing show-footer border-t border-t-light-black bg-black-secondary p-4 text-secondary"
       >
         <section class="grid grid-cols-[1fr_2fr_1fr] gap-4">
           <section
@@ -203,7 +203,10 @@
               <span id="total-song-duration" class="text-sm">0:00</span>
             </section>
           </section>
-          <section id="volume-control" class="flex items-center justify-center">
+          <section
+            id="volume-control"
+            class="flex items-center justify-center gap-2"
+          >
             <span class="material-symbols-outlined"> volume_up </span>
             <input
               type="range"
@@ -211,7 +214,7 @@
               id="volume"
               min="0"
               max="100"
-              class="accent-white"
+              class="h-1 accent-white"
             />
           </section>
         </section>
