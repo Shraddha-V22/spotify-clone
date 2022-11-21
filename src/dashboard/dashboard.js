@@ -292,6 +292,104 @@ const fillContentForPlaylist = async (playlistId) => {
   loadPlaylistTracks(playlist);
 };
 
+const searchQueryHandler = async (query) => {
+  const result = await fetchRequest(
+    `${ENDPOINT.searchTrack}?q=${query}&type=album,track,artist&include_external=audio&limit=5`
+  );
+  console.log(result);
+  const {
+    artists: { items: artistList },
+    tracks: { items: trackList },
+    albums: { items: albumList },
+  } = result;
+
+  const pageContent = document.querySelector("#page-content");
+  pageContent.innerHTML = `<section class="p-4">
+    <section>
+        <h1 class="text-2xl font-medium">Tracks</h1>
+        <section id="search-tracks" class="grid grid-cols-2 my-4"></section>
+    </section>
+    <section>
+      <h1 class="text-2xl font-medium">Artists</h1>
+      <section id="search-artists" class="flex gap-4 my-4"></section>
+    </section>
+    <section>
+      <h1 class="text-2xl font-medium">Albums</h1>
+      <section id="search-albums" class="flex gap-4 my-4"></section> 
+    </section>
+  </section>`;
+
+  const searchTracks = document.querySelector("#search-tracks");
+  searchTracks.innerHTML = "";
+  for (let {
+    album: { images, id, name, artists },
+    preview_url,
+    duration_ms: duration,
+  } of trackList) {
+    let image = images.find((img) => img.height === 64);
+    let artistNames = Array.from(artists, (artist) => artist.name).join(", ");
+    searchTracks.innerHTML += `
+    <section class="search-track flex justify-start items-center gap-2 px-4 py-2 rounded-md hover:bg-light-black hover:cursor-pointer">
+            <img class="h-12 w-12 rounded-sm" src="${image.url}" alt="${name}"/>
+            <article class="flex flex-col gap-2 justify-center">
+              <p class="song-title text-base text-primary line-clamp-1">${name}</p>
+              <p class="text-xs line-clamp-1 text-secondary">${artistNames}</p>
+            </article>
+            <p class="text-sm ml-auto">${formatTime(duration)}</p>
+          </section>
+    `;
+  }
+
+  const searchArtists = document.querySelector("#search-artists");
+  searchArtists.innerHTML = ``;
+  for (let { images, name } of artistList) {
+    let image = images.find((img) => img.height === 320);
+    searchArtists.innerHTML += `
+    <section class="search-artist flex flex-col bg-black-secondary rounded-md gap-4 p-4 hover:bg-light-black hover:cursor-pointer">
+             <img class="rounded-full object-contain h-full w-full" src="${image.url}" alt="${name}'s image" />
+             <h2 class="uppercase">${name}</h2>
+             <p class="text-secondary">Artist</p>
+           </search>
+    `;
+  }
+
+  const searchAlbums = document.querySelector("#search-albums");
+  console.log(searchAlbums);
+  searchAlbums.innerHTML = "";
+  for (let { images, name, artists, release_date } of albumList) {
+    let releaseDate = release_date.split("-")[0];
+    let image = images.find((img) => img.height === 300);
+    let artist = artists.find((art) => art.name);
+    searchAlbums.innerHTML += `
+    <section class="search-album flex flex-col justify-center bg-black-secondary p-4 rounded-md gap-4 w-[250px] hover:bg-light-black hover:cursor-pointer pb-8">
+             <img class="w-full h-full object-contain rounded-md" src="${image.url}" alt="${name} album's image" />
+             <h2 class="text-primary line-clamp-1">${name}</h2>
+             <p class="text-secondary">${releaseDate} • ${artist.name}</p>
+           </search>
+    `;
+  }
+};
+
+const fillContentForSearchPage = () => {
+  const coverContent = document.querySelector("#cover-content");
+  coverContent.classList.add("z-20");
+  coverContent.innerHTML = `<section class="flex h-10">
+    <input id="search-input" type="text" class="w-100 h-10 rounded-full px-4 text-black" placeholder="search" />
+    <!--<button id="search-btn" class="bg-black"><span
+    style="font-size: 40px"
+    class="material-symbols-outlined hover:text-primary"
+  >
+    search
+  </span></button>-->
+  </section>
+  `;
+
+  const searchInput = document.querySelector("#search-input");
+  searchInput.addEventListener("change", () =>
+    searchQueryHandler(searchInput.value)
+  );
+};
+
 const onScrollSticky = (event) => {
   const { scrollTop } = event.target;
   const header = document.querySelector(".header");
@@ -328,6 +426,8 @@ const loadSection = (section) => {
   } else if (section.type === SECTION_TYPE.PLAYLIST) {
     //load the elements for playlist
     fillContentForPlaylist(section.playlist);
+  } else if (section.type === SECTION_TYPE.SEARCH) {
+    fillContentForSearchPage();
   }
   document
     .querySelector(".content")
@@ -354,6 +454,13 @@ const loadUserPlaylist = async () => {
   }
 };
 
+const searchPage = () => {
+  const section = { type: SECTION_TYPE.SEARCH };
+  history.pushState(section, "", "search");
+  loadSection(section);
+  // fillContentForSearchPage();
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   const volume = document.querySelector("#volume");
   const playButton = document.querySelector("#play");
@@ -363,6 +470,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const songProgress = document.querySelector("#progress");
   const songTimeline = document.querySelector("#timeline");
   const audioControl = document.querySelector("#audio-control");
+  const searchButton = document.querySelector("#search-btn");
   let progressInterval;
 
   ({ displayName } = await loadUserProfile());
@@ -370,11 +478,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const section = { type: SECTION_TYPE.DASHBOARD };
   history.pushState(section, "", "");
   // const section = {
-  //   type: SECTION_TYPE.PLAYLIST,
-  //   playlist: "37i9dQZF1DX4Cmr6Ex5w24",
+  //   type: SECTION_TYPE.SEARCH,
   // };
-  // history.pushState(section, "", `/dashboard/playlist/${section.playlist}`);
+  // history.pushState(section, "", `search`);
   loadSection(section);
+
+  searchButton.addEventListener("click", searchPage);
 
   document.addEventListener("click", () => {
     const menuList = document.getElementById("menu-list");

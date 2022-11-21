@@ -11,6 +11,7 @@ export const ENDPOINT = {
   topPlaylists: "browse/categories/toplists/playlists",
   playlist: "playlists",
   userPlaylists: "me/playlists",
+  searchTrack: "search",
 };
 
 export const logout = () => {
@@ -23,4 +24,5 @@ export const logout = () => {
 export const SECTION_TYPE = {
   DASHBOARD: "DASHBOARD",
   PLAYLIST: "PLAYLIST",
+  SEARCH: "SEARCH",
 };

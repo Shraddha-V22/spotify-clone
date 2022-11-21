@@ -34,13 +34,17 @@
           </section>
           <section>
             <ul class="flex flex-col gap-4 text-sm text-secondary">
-              <li
-                class="flex cursor-pointer items-center gap-2 hover:text-primary"
-              >
-                <span class="material-symbols-outlined"> home </span
-                ><span>Home </span>
+              <li>
+                <a
+                  href="/"
+                  class="flex cursor-pointer items-center gap-2 hover:text-primary"
+                >
+                  <span class="material-symbols-outlined"> home </span
+                  ><span>Home </span>
+                </a>
               </li>
               <li
+                id="search-btn"
                 class="flex cursor-pointer items-center gap-2 hover:text-primary"
               >
                 <span class="material-symbols-outlined"> search </span
@@ -119,7 +123,7 @@
             <p>no. of songs</p>
           </section>
         </article>
-        <section id="page-content" class="mt-48 bg-black-base">
+        <section id="page-content" class="mt-56 bg-black-base">
           <header class="px-8">
             <nav>
               <ul
